@@ -299,6 +299,186 @@ static async Task<ContactDetailsDto?> GetContact(int id)
 }
 ```
 
+While we can create a new instance of `HttpClient` every time we want to make a request, it is not a good idea, as it is a heavy object.
+
+A better way to do it is to create a single instance of `HttpClient` and reuse it.
+
+Let's change our code to do that.
+
+First add new packages `Microsoft.Extensions.Hosting`, `Microsoft.Extensions.Http`:
+
+```cmd
+dotnet add package Microsoft.Extensions.Hosting
+dotnet add package Microsoft.Extensions.Http
+```
+
+Then add new directory `Services` and create a new interface `IIntegrationService`:
+
+```csharp
+namespace Contacts.Client.Console.Services;
+
+public interface IIntegrationService
+{
+    Task Run();
+}
+```
+
+Then create a concrete class `CRUDService`:
+
+```csharp
+using Contacts.Client.DTOs;
+
+namespace Contacts.Client.Services;
+
+using System;
+using System.Net;
+using System.Text.Json;
+
+// ReSharper disable once InconsistentNaming - CRUD is an acronym
+public class CRUDService : IIntegrationService
+{
+    private readonly IHttpClientFactory _httpClientFactory;
+
+    public CRUDService(IHttpClientFactory httpClientFactory)
+    {
+        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    }
+
+    public async Task<List<ContactDto>> GetContacts()
+    {
+        var httpClientName = "ContactsAPIClient";
+        var httpClient = _httpClientFactory.CreateClient(httpClientName);
+
+        var response = await httpClient.GetAsync("api/contacts");
+
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        var jsonSerializerOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        var contactDtos = JsonSerializer.Deserialize<List<ContactDto>>(content, jsonSerializerOptions);
+        contactDtos ??= Enumerable.Empty<ContactDto>().ToList();
+
+        return contactDtos;
+    }
+
+    public async Task<ContactDetailsDto?> GetContact(int id)
+    {
+        var httpClientName = "ContactsAPIClient";
+        var httpClient = _httpClientFactory.CreateClient(httpClientName);
+
+        var response = await httpClient.GetAsync($"api/contacts/{id}");
+
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        var contactDetailsDto = JsonSerializer.Deserialize<ContactDetailsDto>(content);
+
+        return contactDetailsDto;
+    }
+
+    public async Task Run()
+    {
+        // R(-ead)
+        {
+            // read all contacts
+
+            Console.WriteLine("GetContacts:\n");
+
+            var contactDtos = await GetContacts();
+
+            foreach (var contactDto in contactDtos)
+            {
+                Console.WriteLine($"{contactDto.Id} {contactDto.FirstName} {contactDto.LastName} {contactDto.Email}");
+            }
+
+            // read a single contact
+
+            Console.WriteLine("\nGetContact:\n");
+
+            var id = 1;
+
+            var contactDetailsDto = await GetContact(id);
+
+            if (contactDetailsDto is not null)
+            {
+                Console.WriteLine($"{contactDetailsDto.Id} {contactDetailsDto.FirstName} {contactDetailsDto.LastName} {contactDetailsDto.Email}");
+            }
+            else
+            {
+                Console.WriteLine($"Contact with id {id} not found");
+            }
+        }
+    }
+}
+```
+
+And finally change `Program.cs` like so:
+
+```csharp
+using System.Net.Http.Headers;
+
+using Contacts.Client.Services;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+// create host
+
+using IHost host = Host.CreateDefaultBuilder(args)
+    .ConfigureServices((_, services) =>
+    {
+        // register services for DI
+
+        // logging
+
+        services.AddLogging(builder =>
+        {
+            builder.AddConsole();
+            builder.AddDebug();
+        });
+
+        // http client
+
+        services.AddHttpClient("ContactsAPIClient", client =>
+        {
+            client.BaseAddress = new Uri("https://localhost:5001");
+            client.DefaultRequestHeaders.Clear();
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        });
+
+        // integration service (CRUD)
+
+        services.AddScoped<IIntegrationService, CRUDService>();
+    })
+    .Build();
+
+try
+{
+    var logger = host.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("Host created.");
+
+    await host.Services.GetRequiredService<IIntegrationService>().Run();
+}
+catch (Exception generalException)
+{
+    var logger = host.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(generalException, "An exception happened while running the integration service.");
+}
+
+await host.RunAsync();
+```
+
 ### Working with Headers and Content Negotiation
 
 _HTTP headers_ allow passing additional information with each request or response.

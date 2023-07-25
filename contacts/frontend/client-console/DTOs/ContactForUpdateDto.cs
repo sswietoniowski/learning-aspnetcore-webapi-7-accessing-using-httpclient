@@ -1,3 +1,3 @@
-namespace Contacts.Client.Console.DTOs;
+namespace Contacts.Client.DTOs;
 
-public record ContactForUpdateDto (string FirstName, string LastName, string Email);
+public record ContactForUpdateDto(string FirstName, string LastName, string Email);
