@@ -621,7 +621,14 @@ Indicating preference:
 Accept: application/json, application/xml;q=0.8
 ```
 
-Showed during demo.
+We can change our previous code, so it would be our preference to use `application/json` (smaller, less verbose), to do that, we can write it like so:
+
+```csharp
+        // we can add multiple Accept headers
+
+        httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml", 0.8));
+```
 
 ### Working with `HttpRequestMessage` Directly
 
