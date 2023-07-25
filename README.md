@@ -91,13 +91,31 @@ The technology the API is built with shouldn't matter to the client.
 
 > Modern-day generation relies on a machine-readable description of the API, and that's where OpenAPI comes in.
 
+To generate DTO classes you've got couple options:
+
+- [`Swagger CodeGen`](https://swagger.io/tools/swagger-codegen/) - requires Java,
+- [`NSwagStudio`](https://github.com/RicoSuter/NSwag/wiki/NSwagStudio),
+- add connected service option in Visual Studio (it is using NSwag internally).
+
 #### Generating DTO Classes from Visual Studio
 
-Showed during demo.
+If you want to generate DTO classes from Visual Studio, you should follow [this](https://learn.microsoft.com/en-us/visualstudio/azure/overview-connected-services?view=vs-2022) article.
+
+While generated client might help you start, it is not a good idea to use it in production.
 
 #### Generating DTO Classes with NSwagStudio
 
-Showed during demo.
+It is a better option compared to Visual Studio, because it allows you to generate DTO classes for multiple languages.
+
+[Here](https://learn.microsoft.com/en-us/aspnet/core/tutorials/getting-started-with-nswag?view=aspnetcore-7.0&tabs=visual-studio#code-generation) you will find a guide on how to generate DTO classes with NSwagStudio.
+
+You can install NSwagStudio like so (provided that you've got Chocolatey installed):
+
+```cmd
+choco install nswagstudio
+```
+
+Generated DTOs are not perfect, but they are a good starting point.
 
 ### Tackling Integration with HttpClient
 
