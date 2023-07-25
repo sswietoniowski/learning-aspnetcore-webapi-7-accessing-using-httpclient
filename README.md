@@ -6,6 +6,8 @@ Based on this course [Accessing APIs Using HttpClient in .NET 6](https://app.plu
 
 Original course materials can be found [here](https://app.pluralsight.com/library/courses/dot-net-6-httpclient-using-accessing-apis/exercise-files) and [here](https://github.com/KevinDockx/AccessingAPIsWithHttpClientDotNet6).
 
+This repository is continuation/update of [this](https://github.com/sswietoniowski/work-codecool-csharp-httpclient-MyMovies) one.
+
 ## Table of Contents
 
 - [Learning ASP.NET Core - WebAPI (.NET 7) Accessing Using HttpClient](#learning-aspnet-core---webapi-net-7-accessing-using-httpclient)
