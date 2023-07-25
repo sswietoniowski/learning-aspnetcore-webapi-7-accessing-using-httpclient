@@ -539,7 +539,73 @@ Content negotiation is driven by:
 
 ### Manipulating Request Headers
 
-Showed during demo.
+We already used `DefaultRequestHeaders` property of `HttpClient` to set `Accept` header, but we can also use it to set other headers.
+
+```csharp
+    client.DefaultRequestHeaders.Clear();
+    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+    // we can also set custom headers
+    //client.DefaultRequestHeaders.Add("X-MyCustomHeader", "MyCustomValue");
+```
+
+Provided that the API we're trying to use is serving multiple content types, we can use `Accept` header to indicate which one we prefer.
+
+Also we should be ready to handle different content types, like so:
+
+```csharp
+    public async Task<List<ContactDto>> GetContactsAsync()
+    {
+        // create a named http client
+
+        var httpClientName = "ContactsAPIClient";
+        var httpClient = _httpClientFactory.CreateClient(httpClientName);
+
+        // it's a good practice to clear the default headers and add the ones you need
+
+        httpClient.DefaultRequestHeaders.Clear();
+
+        // we can add multiple Accept headers
+
+        httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+        httpClient.DefaultRequestHeaders.Add("Accept", "application/xml");
+
+        // make a request
+
+        var response = await httpClient.GetAsync("api/contacts");
+
+        // check the response, throw if not successful
+
+        response.EnsureSuccessStatusCode();
+
+        // read the response content
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        // deserialize the response content
+
+        var contactDtos = new List<ContactDto>();
+
+        // we can use the content type header to determine the deserialization type
+
+        if (response.Content.Headers.ContentType?.MediaType == "application/json")
+        {
+            var jsonSerializerOptions = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            contactDtos = JsonSerializer.Deserialize<List<ContactDto>>(content, jsonSerializerOptions);
+        }
+        else if (response.Content.Headers.ContentType?.MediaType == "application/xml")
+        {
+            var xmlSerializer = new XmlSerializer(typeof(List<ContactDto>));
+            contactDtos = xmlSerializer.Deserialize(new StringReader(content)) as List<ContactDto>;
+        }
+
+        contactDtos ??= Enumerable.Empty<ContactDto>().ToList();
+
+        return contactDtos;
+    }
+```
 
 ### Indicating Preference with the Relative Quality Parameter
 

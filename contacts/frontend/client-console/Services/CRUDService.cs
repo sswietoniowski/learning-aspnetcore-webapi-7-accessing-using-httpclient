@@ -1,3 +1,5 @@
+using System.Xml.Serialization;
+
 using Contacts.Client.DTOs;
 
 namespace Contacts.Client.Services;
@@ -23,6 +25,10 @@ public class CRUDService : IIntegrationService
         var httpClientName = "ContactsAPIClient";
         var httpClient = _httpClientFactory.CreateClient(httpClientName);
 
+        httpClient.DefaultRequestHeaders.Clear();
+        httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+        httpClient.DefaultRequestHeaders.Add("Accept", "application/xml");
+
         // make a request
 
         var response = await httpClient.GetAsync("api/contacts");
@@ -37,11 +43,22 @@ public class CRUDService : IIntegrationService
 
         // deserialize the response content
 
-        var jsonSerializerOptions = new JsonSerializerOptions
+        var contactDtos = new List<ContactDto>();
+
+        if (response.Content.Headers.ContentType?.MediaType == "application/json")
         {
-            PropertyNameCaseInsensitive = true
-        };
-        var contactDtos = JsonSerializer.Deserialize<List<ContactDto>>(content, jsonSerializerOptions);
+            var jsonSerializerOptions = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            contactDtos = JsonSerializer.Deserialize<List<ContactDto>>(content, jsonSerializerOptions);
+        }
+        else if (response.Content.Headers.ContentType?.MediaType == "application/xml")
+        {
+            var xmlSerializer = new XmlSerializer(typeof(List<ContactDto>));
+            contactDtos = xmlSerializer.Deserialize(new StringReader(content)) as List<ContactDto>;
+        }
+
         contactDtos ??= Enumerable.Empty<ContactDto>().ToList();
 
         return contactDtos;
@@ -51,6 +68,9 @@ public class CRUDService : IIntegrationService
     {
         var httpClientName = "ContactsAPIClient";
         var httpClient = _httpClientFactory.CreateClient(httpClientName);
+
+        httpClient.DefaultRequestHeaders.Clear();
+        httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 
         var response = await httpClient.GetAsync($"api/contacts/{id}");
 
