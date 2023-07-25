@@ -492,7 +492,7 @@ await host.RunAsync();
 
 **Warning**:
 
-Even though `HttpClient` class implements `IDisposable`, it is not a good idea to dispose with `using`. More on that [here](https://youtu.be/M-iysvlvOjM),
+Even though `HttpClient` class implements `IDisposable`, it is not a good idea to dispose it with `using`. More on that [here](https://youtu.be/M-iysvlvOjM),
 and for mor info about `IHttpClientFactory` check out [this](https://youtu.be/xI6uMT0bg4I) video.
 
 ### Working with Headers and Content Negotiation
