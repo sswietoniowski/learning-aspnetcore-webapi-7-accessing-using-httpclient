@@ -630,6 +630,8 @@ We can change our previous code, so it would be our preference to use `applicati
         httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml", 0.8));
 ```
 
+This preference must be supported by the API, otherwise we will get a `406 Not Acceptable` response. ASP.NET Core supports it out of the box.
+
 ### Working with `HttpRequestMessage` Directly
 
 Showed during demo.
