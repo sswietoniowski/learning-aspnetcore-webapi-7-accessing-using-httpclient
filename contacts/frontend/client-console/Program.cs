@@ -27,7 +27,9 @@ using IHost host = Host.CreateDefaultBuilder(args)
         {
             client.BaseAddress = new Uri("https://localhost:5001");
             client.DefaultRequestHeaders.Clear();
+            // defining content type here is not a good idea these days because the preference is to use vendor specific content types
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            client.Timeout = TimeSpan.FromSeconds(30);
         });
 
         // integration service (CRUD)

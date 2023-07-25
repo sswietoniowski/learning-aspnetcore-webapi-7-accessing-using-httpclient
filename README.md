@@ -649,7 +649,18 @@ For that we can use `HttpRequestMessage` directly like so:
 
 ### Providing Default Values for HttpClient and `JsonSerializerOptions`
 
-Showed during demo.
+We already did that while registering `HttpClient` in `Program.cs`:
+
+```csharp
+        services.AddHttpClient("ContactsAPIClient", client =>
+        {
+            client.BaseAddress = new Uri("https://localhost:5001");
+            client.DefaultRequestHeaders.Clear();
+            // defining content type here is not a good idea these days because the preference is to use vendor specific content types
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+```
 
 ### Creating a Resource
 
