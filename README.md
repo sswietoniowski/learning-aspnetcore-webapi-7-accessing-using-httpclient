@@ -46,7 +46,7 @@ dotnet watch run
 To run a console client:
 
 ```cmd
-cd .\contacts\frontend\console-client
+cd .\contacts\frontend\client-console
 dotnet restore
 dotnet build
 dotnet watch run
