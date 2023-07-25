@@ -18,14 +18,24 @@ public class CRUDService : IIntegrationService
 
     public async Task<List<ContactDto>> GetContactsAsync()
     {
+        // create a named http client
+
         var httpClientName = "ContactsAPIClient";
         var httpClient = _httpClientFactory.CreateClient(httpClientName);
 
+        // make a request
+
         var response = await httpClient.GetAsync("api/contacts");
+
+        // check the response, throw if not successful
 
         response.EnsureSuccessStatusCode();
 
+        // read the response content
+
         var content = await response.Content.ReadAsStringAsync();
+
+        // deserialize the response content
 
         var jsonSerializerOptions = new JsonSerializerOptions
         {
