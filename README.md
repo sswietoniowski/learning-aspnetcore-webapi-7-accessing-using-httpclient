@@ -300,6 +300,7 @@ static async Task<ContactDetailsDto?> GetContact(int id)
 ```
 
 While we can create a new instance of `HttpClient` every time we want to make a request, it is not a good idea, as it is a heavy object.
+For our simple console application it is not a big deal, but in a real application, especially a web application, it could be a problem.
 
 A better way to do it is to create a single instance of `HttpClient` and reuse it.
 
@@ -344,16 +345,26 @@ public class CRUDService : IIntegrationService
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     }
 
-    public async Task<List<ContactDto>> GetContacts()
+    public async Task<List<ContactDto>> GetContactsAsync()
     {
+        // create a named http client
+
         var httpClientName = "ContactsAPIClient";
         var httpClient = _httpClientFactory.CreateClient(httpClientName);
 
+        // make a request
+
         var response = await httpClient.GetAsync("api/contacts");
+
+        // check the response, throw if not successful
 
         response.EnsureSuccessStatusCode();
 
+        // read the response content
+
         var content = await response.Content.ReadAsStringAsync();
+
+        // deserialize the response content
 
         var jsonSerializerOptions = new JsonSerializerOptions
         {
@@ -478,6 +489,11 @@ catch (Exception generalException)
 
 await host.RunAsync();
 ```
+
+**Warning**:
+
+Even though `HttpClient` class implements `IDisposable`, it is not a good idea to dispose with `using`. More on that [here](https://youtu.be/M-iysvlvOjM),
+and for mor info about `IHttpClientFactory` check out [this](https://youtu.be/xI6uMT0bg4I) video.
 
 ### Working with Headers and Content Negotiation
 

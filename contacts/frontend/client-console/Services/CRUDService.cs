@@ -16,7 +16,7 @@ public class CRUDService : IIntegrationService
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     }
 
-    public async Task<List<ContactDto>> GetContacts()
+    public async Task<List<ContactDto>> GetContactsAsync()
     {
         var httpClientName = "ContactsAPIClient";
         var httpClient = _httpClientFactory.CreateClient(httpClientName);
@@ -37,7 +37,7 @@ public class CRUDService : IIntegrationService
         return contactDtos;
     }
 
-    public async Task<ContactDetailsDto?> GetContact(int id)
+    public async Task<ContactDetailsDto?> GetContactAsync(int id)
     {
         var httpClientName = "ContactsAPIClient";
         var httpClient = _httpClientFactory.CreateClient(httpClientName);
@@ -58,7 +58,7 @@ public class CRUDService : IIntegrationService
         return contactDetailsDto;
     }
 
-    public async Task Run()
+    public async Task RunAsync()
     {
         // R(-ead)
         {
@@ -66,7 +66,7 @@ public class CRUDService : IIntegrationService
 
             Console.WriteLine("GetContacts:\n");
 
-            var contactDtos = await GetContacts();
+            var contactDtos = await GetContactsAsync();
 
             foreach (var contactDto in contactDtos)
             {
@@ -79,7 +79,7 @@ public class CRUDService : IIntegrationService
 
             var id = 1;
 
-            var contactDetailsDto = await GetContact(id);
+            var contactDetailsDto = await GetContactAsync(id);
 
             if (contactDetailsDto is not null)
             {

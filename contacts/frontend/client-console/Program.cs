@@ -41,7 +41,7 @@ try
     var logger = host.Services.GetRequiredService<ILogger<Program>>();
     logger.LogInformation("Host created.");
 
-    await host.Services.GetRequiredService<IIntegrationService>().Run();
+    await host.Services.GetRequiredService<IIntegrationService>().RunAsync();
 }
 catch (Exception generalException)
 {
