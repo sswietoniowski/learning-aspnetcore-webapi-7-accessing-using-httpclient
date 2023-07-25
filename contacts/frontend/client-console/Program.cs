@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
 
 using Contacts.Client.Console.DTOs;
 using System.Text.Json;
@@ -26,15 +27,18 @@ static async Task<List<ContactDto>> GetContacts()
 
     var response = await httpClient.GetAsync("https://localhost:5001/api/contacts");
 
+    // we want to make sure that the API responded with 200 OK, if not we throw an exception
     response.EnsureSuccessStatusCode();
 
     var content = await response.Content.ReadAsStringAsync();
 
+    // our API returns JSON in camelCase, we want to deserialize it to PascalCase
     var jsonSerializerOptions = new JsonSerializerOptions
     {
         PropertyNameCaseInsensitive = true
     };
     var contactDtos = JsonSerializer.Deserialize<List<ContactDto>>(content, jsonSerializerOptions);
+    // there is a chance that the API returns null, so we need to check for that
     contactDtos ??= Enumerable.Empty<ContactDto>().ToList();
 
     return contactDtos;
