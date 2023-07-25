@@ -121,16 +121,49 @@ We should know how to perform basic CRUD operations using HttpClient.
 
 ### Getting a Resource
 
-An example of getting a _resource_ was already shown in the previous section:
+An example of getting a _resource_ was already shown in the previous section, but in our case
+we must tweak it a little bit to make it work:
 
 ```csharp
-var httpClient = new HttpClient();
-var response = await httpClient.GetAsync("https://localhost:5001/api/contacts");
+// R(-ead)
 
-response.EnsureSuccessStatusCode();
+{
+    Console.WriteLine("GetContacts:\n");
 
-var content = await response.Content.ReadAsStringAsync();
-var contacts = JsonSerializer.Deserialize<List<ContactDto>>(content);
+    var contactDtos = await GetContacts();
+
+    foreach (var contactDto in contactDtos)
+    {
+        Console.WriteLine($"{contactDto.Id} {contactDto.FirstName} {contactDto.LastName} {contactDto.Email}");
+    }
+}
+
+static async Task<List<ContactDto>> GetContacts()
+{
+    var httpClient = new HttpClient();
+
+    // our API requires request header: Accept: application/json
+    httpClient.DefaultRequestHeaders.Accept.Clear();
+    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+    var response = await httpClient.GetAsync("https://localhost:5001/api/contacts");
+
+    // we want to make sure that the API responded with 200 OK, if not we throw an exception
+    response.EnsureSuccessStatusCode();
+
+    var content = await response.Content.ReadAsStringAsync();
+
+    // our API returns JSON in camelCase, we want to deserialize it to PascalCase
+    var jsonSerializerOptions = new JsonSerializerOptions
+    {
+        PropertyNameCaseInsensitive = true
+    };
+    var contactDtos = JsonSerializer.Deserialize<List<ContactDto>>(content, jsonSerializerOptions);
+    // there is a chance that the API returns null, so we need to check for that
+    contactDtos ??= Enumerable.Empty<ContactDto>().ToList();
+
+    return contactDtos;
+}
 ```
 
 ### Working with Headers and Content Negotiation
