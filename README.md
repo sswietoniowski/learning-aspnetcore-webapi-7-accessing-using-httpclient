@@ -634,7 +634,18 @@ This preference must be supported by the API, otherwise we will get a `406 Not A
 
 ### Working with `HttpRequestMessage` Directly
 
-Showed during demo.
+Sofar we were using `DefaultRequestHeaders`, while we can do that it would be better if we could be more specific about the headers we want to set and when.
+
+For that we can use `HttpRequestMessage` directly like so:
+
+```csharp
+        // make a request
+
+        var request = new HttpRequestMessage(HttpMethod.Get, "api/contacts");
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+        var response = await httpClient.SendAsync(request);
+```
 
 ### Providing Default Values for HttpClient and `JsonSerializerOptions`
 

@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Xml.Serialization;
 
 using Contacts.Client.DTOs;
@@ -25,11 +26,21 @@ public class CRUDService : IIntegrationService
         var httpClientName = "ContactsAPIClient";
         var httpClient = _httpClientFactory.CreateClient(httpClientName);
 
+        // it's a good practice to clear the default headers and add the ones you need
+
         httpClient.DefaultRequestHeaders.Clear();
-        httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-        httpClient.DefaultRequestHeaders.Add("Accept", "application/xml");
+
+        // we can add multiple Accept headers
+
+        httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml", 0.8));
 
         // make a request
+
+        //var request = new HttpRequestMessage(HttpMethod.Get, "api/contacts");
+        //request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+        //var response = await httpClient.SendAsync(request);
 
         var response = await httpClient.GetAsync("api/contacts");
 
@@ -44,6 +55,8 @@ public class CRUDService : IIntegrationService
         // deserialize the response content
 
         var contactDtos = new List<ContactDto>();
+
+        // we can use the content type header to determine the deserialization type
 
         if (response.Content.Headers.ContentType?.MediaType == "application/json")
         {
