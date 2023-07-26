@@ -101,7 +101,7 @@ public class CRUDService : IIntegrationService
         return contactDetailsDto;
     }
 
-    public async Task<ContactForCreationDto> CreateContact(ContactForCreationDto contactForCreationDto)
+    public async Task<ContactForCreationDto> CreateContactAsync(ContactForCreationDto contactForCreationDto)
     {
         var httpClientName = "ContactsAPIClient";
         var httpClient = _httpClientFactory.CreateClient(httpClientName);
@@ -131,6 +131,27 @@ public class CRUDService : IIntegrationService
         return contactForCreationDto;
     }
 
+    public async Task UpdateContactAsync(int id, ContactForUpdateDto contactForUpdateDto)
+    {
+        var httpClientName = "ContactsAPIClient";
+        var httpClient = _httpClientFactory.CreateClient(httpClientName);
+
+        httpClient.DefaultRequestHeaders.Clear();
+        httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+
+        var content = JsonSerializer.Serialize(contactForUpdateDto, _jsonSerializerOptionsWrapper.Options);
+
+        var request = new HttpRequestMessage(HttpMethod.Put, $"api/contacts/{id}");
+
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        request.Content = new StringContent(content, Encoding.UTF8, "application/json");
+        request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+        var response = await httpClient.SendAsync(request);
+
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task RunAsync()
     {
         // C(-reate)
@@ -140,7 +161,7 @@ public class CRUDService : IIntegrationService
 
             Console.WriteLine("CreateContact:\n");
 
-            contactForCreationDto = await CreateContact(contactForCreationDto);
+            contactForCreationDto = await CreateContactAsync(contactForCreationDto);
 
             Console.WriteLine($"{contactForCreationDto.FirstName} {contactForCreationDto.LastName} {contactForCreationDto.Email}");
         }
@@ -175,5 +196,37 @@ public class CRUDService : IIntegrationService
                 Console.WriteLine($"Contact with id {id} not found");
             }
         }
+
+        // U(-pdate)
+
+        {
+            var id = 1;
+            var contactForUpdateDto = new ContactForUpdateDto("Jan", "Nowak", "jnowak@unknown.pl");
+
+            Console.WriteLine("\nUpdateContact:\n");
+
+            await UpdateContactAsync(id, contactForUpdateDto);
+
+            Console.WriteLine($"Contact with id {id} updated");
+
+            var contactDetailsDto = await GetContactAsync(id);
+
+            Console.WriteLine(contactDetailsDto is not null
+                ? $"{contactDetailsDto.Id} {contactDetailsDto.FirstName} {contactDetailsDto.LastName} {contactDetailsDto.Email}"
+                : $"Contact with id {id} not found");
+
+            try
+            {
+                id = 1000;
+
+                // update a non-existing contact
+                await UpdateContactAsync(id, contactForUpdateDto);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+            }
+        }
+
     }
 }

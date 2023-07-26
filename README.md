@@ -727,10 +727,10 @@ Also look [here](https://learn.microsoft.com/en-us/dotnet/standard/serialization
 
 ### Creating a Resource
 
-To create a new resource we can use this code:
+To create a new resource we can use this code (`POST` method):
 
 ```csharp
-    public async Task<ContactForCreationDto> CreateContact(ContactForCreationDto contactForCreationDto)
+    public async Task<ContactForCreationDto> CreateContactAsync(ContactForCreationDto contactForCreationDto)
     {
         var httpClientName = "ContactsAPIClient";
         var httpClient = _httpClientFactory.CreateClient(httpClientName);
@@ -773,7 +773,7 @@ and test it like so:
 
             Console.WriteLine("CreateContact:\n");
 
-            contactForCreationDto = await CreateContact(contactForCreationDto);
+            contactForCreationDto = await CreateContactAsync(contactForCreationDto);
 
             Console.WriteLine($"{contactForCreationDto.FirstName} {contactForCreationDto.LastName} {contactForCreationDto.Email}");
         }
@@ -789,7 +789,7 @@ and test it like so:
 
 `HttpRequestMessage.Headers` is a property that allows us to set headers for a specific request.
 
-`HttpRequestMessage.Content.Headers` is a property that allows us to set headers for a specific request.
+`HttpRequestMessage.Content.Headers` is a property that allows us to set headers for a specific body of the request.
 
 ### Inspecting Content Types
 
@@ -804,7 +804,69 @@ Optimized for their type of content.
 
 ### Updating a Resource
 
-Showed during demo.
+To update a resource do so like this (`PUT` method - we're replacing the whole resource):
+
+```csharp
+    public async Task UpdateContactAsync(int id, ContactForUpdateDto contactForUpdateDto)
+    {
+        var httpClientName = "ContactsAPIClient";
+        var httpClient = _httpClientFactory.CreateClient(httpClientName);
+
+        httpClient.DefaultRequestHeaders.Clear();
+        httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+
+        var content = JsonSerializer.Serialize(contactForUpdateDto, _jsonSerializerOptionsWrapper.Options);
+
+        var request = new HttpRequestMessage(HttpMethod.Put, $"api/contacts/{id}");
+
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        request.Content = new StringContent(content, Encoding.UTF8, "application/json");
+        request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+        var response = await httpClient.SendAsync(request);
+
+        response.EnsureSuccessStatusCode();
+    }
+```
+
+Then to test it out:
+
+```csharp
+        // ...
+
+        // U(-pdate)
+
+        {
+            var id = 1;
+            var contactForUpdateDto = new ContactForUpdateDto("Jan", "Nowak", "jnowak@unknown.pl");
+
+            Console.WriteLine("\nUpdateContact:\n");
+
+            await UpdateContactAsync(id, contactForUpdateDto);
+
+            Console.WriteLine($"Contact with id {id} updated");
+
+            var contactDetailsDto = await GetContactAsync(id);
+
+            Console.WriteLine(contactDetailsDto is not null
+                ? $"{contactDetailsDto.Id} {contactDetailsDto.FirstName} {contactDetailsDto.LastName} {contactDetailsDto.Email}"
+                : $"Contact with id {id} not found");
+
+            try
+            {
+                id = 1000;
+
+                // update a non-existing contact
+                await UpdateContactAsync(id, contactForUpdateDto);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+            }
+        }
+
+        // ...
+```
 
 ### Deleting a Resource
 
