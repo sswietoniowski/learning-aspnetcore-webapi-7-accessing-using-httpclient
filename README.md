@@ -923,6 +923,8 @@ For `PUT` we could use `PutAsync`.
 
 And for `DELETE` we could use `DeleteAsync`.
 
+If we need to define an `Accept` header per our request, we can't use these shortcuts.
+
 ## Summary
 
 Now you know how to use HttpClient to interact with an API.
