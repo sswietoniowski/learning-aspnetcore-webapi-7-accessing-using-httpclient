@@ -662,6 +662,69 @@ We already did that while registering `HttpClient` in `Program.cs`:
         });
 ```
 
+To define `JsonSerializerOptions` global object that we would be able to use later, we must use a "trick",
+first I've added a new directory `Helpers` and in it a new class `JsonSerializerOptionsWrapper` like so:
+
+```csharp
+using System.Text.Json;
+
+namespace Contacts.Client.Helpers;
+
+public class JsonSerializerOptionsWrapper
+{
+    public JsonSerializerOptions Options { get; }
+
+    public JsonSerializerOptionsWrapper()
+    {
+        Options = new JsonSerializerOptions(
+            JsonSerializerDefaults.Web);
+        Options.DefaultBufferSize = 10;
+    }
+}
+```
+
+Then we need to register this class as a singleton:
+
+```csharp
+        // json serializer options
+
+        services.AddSingleton<JsonSerializerOptionsWrapper>();
+```
+
+Now we can inject that object into our service:
+
+```csharp
+public class CRUDService : IIntegrationService
+{
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly JsonSerializerOptionsWrapper _jsonSerializerOptionsWrapper;
+
+    public CRUDService(IHttpClientFactory httpClientFactory, JsonSerializerOptionsWrapper jsonSerializerOptionsWrapper)
+    {
+        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+        _jsonSerializerOptionsWrapper = jsonSerializerOptionsWrapper ?? throw new ArgumentNullException(nameof(jsonSerializerOptionsWrapper));
+    }
+
+    // ...
+```
+
+And use it whenever you need to:
+
+```csharp
+        // ...
+
+        if (response.Content.Headers.ContentType?.MediaType == "application/json")
+        {
+            contactDtos = JsonSerializer.Deserialize<List<ContactDto>>(content, _jsonSerializerOptionsWrapper.Options);
+        }
+
+        // ...
+```
+
+An interesting discussion about `JsonSerializerOptions` default settings can be read [here](https://github.com/dotnet/runtime/issues/31094).
+
+Also look [here](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/configure-options?pivots=dotnet-7-0#web-defaults-for-jsonserializeroptions).
+
 ### Creating a Resource
 
 Showed during demo.

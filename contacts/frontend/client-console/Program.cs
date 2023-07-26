@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Headers;
 
+using Contacts.Client.Helpers;
 using Contacts.Client.Services;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +21,10 @@ using IHost host = Host.CreateDefaultBuilder(args)
             builder.AddConsole();
             builder.AddDebug();
         });
+
+        // json serializer options
+
+        services.AddSingleton<JsonSerializerOptionsWrapper>();
 
         // http client
 

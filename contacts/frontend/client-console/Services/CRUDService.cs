@@ -1,22 +1,24 @@
-using System.Net.Http.Headers;
-using System.Xml.Serialization;
-
 using Contacts.Client.DTOs;
+using Contacts.Client.Helpers;
 
 namespace Contacts.Client.Services;
 
 using System;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Xml.Serialization;
 
 // ReSharper disable once InconsistentNaming - CRUD is an acronym
 public class CRUDService : IIntegrationService
 {
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly JsonSerializerOptionsWrapper _jsonSerializerOptionsWrapper;
 
-    public CRUDService(IHttpClientFactory httpClientFactory)
+    public CRUDService(IHttpClientFactory httpClientFactory, JsonSerializerOptionsWrapper jsonSerializerOptionsWrapper)
     {
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+        _jsonSerializerOptionsWrapper = jsonSerializerOptionsWrapper ?? throw new ArgumentNullException(nameof(jsonSerializerOptionsWrapper));
     }
 
     public async Task<List<ContactDto>> GetContactsAsync()
@@ -60,11 +62,7 @@ public class CRUDService : IIntegrationService
 
         if (response.Content.Headers.ContentType?.MediaType == "application/json")
         {
-            var jsonSerializerOptions = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
-            contactDtos = JsonSerializer.Deserialize<List<ContactDto>>(content, jsonSerializerOptions);
+            contactDtos = JsonSerializer.Deserialize<List<ContactDto>>(content, _jsonSerializerOptionsWrapper.Options);
         }
         else if (response.Content.Headers.ContentType?.MediaType == "application/xml")
         {
