@@ -1,3 +1,5 @@
+using System.Text;
+
 using Contacts.Client.DTOs;
 using Contacts.Client.Helpers;
 
@@ -99,13 +101,55 @@ public class CRUDService : IIntegrationService
         return contactDetailsDto;
     }
 
+    public async Task<ContactForCreationDto> CreateContact(ContactForCreationDto contactForCreationDto)
+    {
+        var httpClientName = "ContactsAPIClient";
+        var httpClient = _httpClientFactory.CreateClient(httpClientName);
+
+        httpClient.DefaultRequestHeaders.Clear();
+        httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+
+        var content = JsonSerializer.Serialize(contactForCreationDto, _jsonSerializerOptionsWrapper.Options);
+
+        var request = new HttpRequestMessage(HttpMethod.Post, "api/contacts");
+
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        request.Content = new StringContent(content, Encoding.UTF8, "application/json");
+        request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+        // we could use PostAsJsonAsync instead of the above like so:
+        // var response = await httpClient.PostAsJsonAsync("api/contacts", contactForCreationDto);
+
+        var response = await httpClient.SendAsync(request);
+
+        response.EnsureSuccessStatusCode();
+
+        content = await response.Content.ReadAsStringAsync();
+
+        contactForCreationDto = JsonSerializer.Deserialize<ContactForCreationDto>(content, _jsonSerializerOptionsWrapper.Options)!;
+
+        return contactForCreationDto;
+    }
+
     public async Task RunAsync()
     {
+        // C(-reate)
+
+        {
+            var contactForCreationDto = new ContactForCreationDto("John", "Doe", "jdoe@unknown.com");
+
+            Console.WriteLine("CreateContact:\n");
+
+            contactForCreationDto = await CreateContact(contactForCreationDto);
+
+            Console.WriteLine($"{contactForCreationDto.FirstName} {contactForCreationDto.LastName} {contactForCreationDto.Email}");
+        }
+
         // R(-ead)
         {
             // read all contacts
 
-            Console.WriteLine("GetContacts:\n");
+            Console.WriteLine("\nGetContacts:\n");
 
             var contactDtos = await GetContactsAsync();
 
