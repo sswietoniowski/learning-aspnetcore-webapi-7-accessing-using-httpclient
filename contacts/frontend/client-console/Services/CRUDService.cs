@@ -152,10 +152,23 @@ public class CRUDService : IIntegrationService
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task DeleteContactAsync(int id)
+    {
+        var httpClientName = "ContactsAPIClient";
+        var httpClient = _httpClientFactory.CreateClient(httpClientName);
+
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"api/contacts/{id}");
+
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+        var response = await httpClient.SendAsync(request);
+
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task RunAsync()
     {
         // C(-reate)
-
         {
             var contactForCreationDto = new ContactForCreationDto("John", "Doe", "jdoe@unknown.com");
 
@@ -198,7 +211,6 @@ public class CRUDService : IIntegrationService
         }
 
         // U(-pdate)
-
         {
             var id = 1;
             var contactForUpdateDto = new ContactForUpdateDto("Jan", "Nowak", "jnowak@unknown.pl");
@@ -228,5 +240,21 @@ public class CRUDService : IIntegrationService
             }
         }
 
+        // D(-elete)
+        {
+            var id = 1;
+
+            Console.WriteLine("\nDeleteContact:\n");
+
+            await DeleteContactAsync(id);
+
+            Console.WriteLine($"Contact with id {id} deleted");
+
+            var contactDetailsDto = await GetContactAsync(id);
+
+            Console.WriteLine(contactDetailsDto is not null 
+                ? $"{contactDetailsDto.Id} {contactDetailsDto.FirstName} {contactDetailsDto.LastName} {contactDetailsDto.Email}"
+                : $"Contact with id {id} not found");
+        }
     }
 }

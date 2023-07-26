@@ -870,11 +870,58 @@ Then to test it out:
 
 ### Deleting a Resource
 
-Showed during demo.
+To delete (`DELETE` method):
+
+```csharp
+    // ...
+
+    public async Task DeleteContactAsync(int id)
+    {
+        var httpClientName = "ContactsAPIClient";
+        var httpClient = _httpClientFactory.CreateClient(httpClientName);
+
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"api/contacts/{id}");
+
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+        var response = await httpClient.SendAsync(request);
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    // ...
+```
+
+And:
+
+```csharp
+        // D(-elete)
+        {
+            var id = 1;
+
+            Console.WriteLine("\nDeleteContact:\n");
+
+            await DeleteContactAsync(id);
+
+            Console.WriteLine($"Contact with id {id} deleted");
+
+            var contactDetailsDto = await GetContactAsync(id);
+
+            Console.WriteLine(contactDetailsDto is not null
+                ? $"{contactDetailsDto.Id} {contactDetailsDto.FirstName} {contactDetailsDto.LastName} {contactDetailsDto.Email}"
+                : $"Contact with id {id} not found");
+        }
+```
 
 ### Using Shortcuts
 
-Showed during demo.
+Instead of using `HttpRequestMessage` and `SendAsync`, we could use shortcuts like so.
+
+For `POST` we could use `PostAsync` (or `PostAsJsonAsync`).
+
+For `PUT` we could use `PutAsync`.
+
+And for `DELETE` we could use `DeleteAsync`.
 
 ## Summary
 
